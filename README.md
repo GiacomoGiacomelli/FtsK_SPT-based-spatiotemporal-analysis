@@ -34,3 +34,13 @@ Script_R1_Filtering_and_Flipping:
 - Output 4: Filtered + Aligned + ROIexclusive + CellName + CellDiameter + CellArea (OUTPUT.txt)
 - Output 5: Filtered + Aligned + ROIexclusive (can be imported in ZenBlack) (CELLS_DRIFTED_FILTERED_IMG.txt)
 - Output 6: Filtered + Aligned + ROIexclusive + CellName + CellDiameter + CellArea + RotatioRelatedParameters (OUTPUT_ROTATED)
+
+Script_R2_Comparison:
+- Manual Input required: Update the filepaths in the "Import Files" section
+- Input 1: OUTPUT_ROTATED for all fields of view and two conditions of choice
+- Input 2: PALM_Table_Example.txt
+- Output 1: Table including all fields of view for the two conditions of choice ("Comparison_DATA.txt")
+- Output 2: Intensity Comparison Map for the difference between conditions ("Comparison_MAP.txt")
+- Output 3: Intensity Comparison Map for the first condition ("Strain1_MAP.txt")
+- Output 4: Intensity Comparison Map for the second condition ("Strain2_MAP.txt")
+
