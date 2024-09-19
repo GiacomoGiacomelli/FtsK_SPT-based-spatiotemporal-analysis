@@ -1,0 +1,130 @@
+############################################################################################################################################################################
+#Activate necessary packages
+############################################################################################################################################################################
+
+library("ggplot2")
+library("plotrix")
+library("fields")                                           
+library("spatstat")
+library("pgirmess")
+library("RColorBrewer")
+
+############################################################################################################################################################################
+#File input and filtering
+############################################################################################################################################################################
+
+directory_input<-readline("where is the file? e.g.C:/Users/Elyra/table_folder:")
+directory<-gsub("\\", "/", directory_input, fixed=TRUE)                                                   #working on windows so I have to invert \ to /
+setwd(directory)                                                                                          #setting working directory
+dir()                                                                                                     #show directory content
+file1name<-readline("file1 name:")                                                                        #input the name of the PALM localization table file in the console after running this line
+readLines(file1name)                                                                                      
+
+#Elyra PALM tables contain an embedded NULL; the length of the table is equal to the embedded NULL position minus 2
+
+file<-read.delim(file1name, header=T, nrow=XXXXX)                                                         #nrow = embedded null line position is -2
+fileR<-file[file$Channel=XX | file$Channel=XX,]                                                           #file$Channel= Channel number where PAmCherry was imaged
+fileG<-file[file$Channel=XX,]                                                                            #file$Channel= Channel number where mNeonGreen was imaged
+
+#example of filtering (depends on fluorophore used and imaging condition - (fileG1->mNeonGreen, fileR1->PAmCherry))
+#skip the next two lines of code if you still have to determine the filtering parameters
+fileR1<-fileR[fileR$Number.Photons>XXX & fileR$Number.Photons<XXX & fileR$PSF.half.width..nm.>XXX & fileR$PSF.half.width..nm.<XXX,]
+fileG1<-fileG[fileG$Number.Photons>XXX & fileG$Number.Photons<XXX & fileG$PSF.half.width..nm.>XXX & fileG$PSF.half.width..nm.<XXX,]
+
+############################################################################################################################################################################
+#Invert Y because of how data are read by software + shift X and Y according to mask obtained from the Bright Field imaging
+############################################################################################################################################################################
+fileR2<-fileR1  #or fileG1 accordingly to which fluorophore is currently being analysed ()                                           
+fileR2$Position.Y..nm.<-51200-fileR2$Position.Y..nm.     
+fileR2$Position.X..nm.<-fileR2$Position.X..nm.+XXX
+fileR2$Position.Y..nm.<-fileR2$Position.Y..nm.+XXX
+
+fx<-fileR2
+
+############################################################################################################################################################################
+#Change folder to where the R.Cell*.txt files are
+#Verify correct alignment between events and ROIs
+############################################################################################################################################################################
+
+directory_input<-readline("where is the file? e.g.C:/Users/Giacomo/Documents/phd/Elyra/November2015:")
+directory<-gsub("\\", "/", directory_input, fixed=TRUE)                                                   #working on windows so I have to invert \ to /
+setwd(directory)                                                                                          #setting working directory
+dir()                                                                                                     #show directory content
+
+
+fileNames <- Sys.glob("R.Cell*.txt")
+CELLS<-data.frame()
+LISTofAREAS<-c()
+fx[14]<-NA
+fx[15]<-NA
+fx[16]<-NA
+colnames(fx)[14]<-"CellName"
+colnames(fx)[15]<-"CellDiameter"
+colnames(fx)[16]<-"CellArea"
+
+#The plot(realsA) within the  cycle shows the position of the events within the used ROIs, shift them accordingly if necessary
+
+for (i in fileNames) {
+  c1<-read.table(i, header=TRUE)
+  cx1<-(10*c1$X) 
+  cy1<-(10*c1$Y) 
+  poli<-list(list(x=cx1, y=cy1))
+  cm1<-owin(poly=poli)
+  pp3<-as.ppp(fx[c(5:6)],cm1)
+  realsA<-subset(pp3,cm1)
+  plot(realsA)                                  
+  if (length(realsA$x)>0){
+    for (k in 1:length(realsA$x)) {
+      fx[fx$Position.X..nm.==realsA[k]$x & fx$Position.Y..nm.==realsA[k]$y,14]<-i
+      fx[fx$Position.X..nm.==realsA[k]$x & fx$Position.Y..nm.==realsA[k]$y,15]<-diameter(cm1)
+      fx[fx$Position.X..nm.==realsA[k]$x & fx$Position.Y..nm.==realsA[k]$y,16]<-area.owin(cm1)
+      CELLS<-rbind(CELLS,fx[fx$Position.X..nm.==realsA[k]$x & fx$Position.Y..nm.==realsA[k]$y,])
+    }
+  LISTofAREAS<-c(LISTofAREAS,poli)
+  }
+}
+
+write.table(fx, file="Channel_#_updatedtableX.txt",sep="\t",row.names = FALSE, quote=FALSE)
+saveRDS(LISTofAREAS, file="AreaListX.RData")
+
+fileR2<-fx
+
+############################################################################################################################################################################
+#Exclude events lying outside the ROIs
+#Update table accordingly
+############################################################################################################################################################################
+
+pov<-owin(poly=LISTofAREAS)
+pp<-as.ppp(fileR2[c(5:6)],pov)
+reals<-subset(pp,pov)
+
+fileR3<-data.frame()
+for (i in 1:length(reals$x)) {
+  fileR3<-rbind(fileR3,fileR2[fileR2$Position.X..nm.==reals[i]$x & fileR2$Position.Y..nm.==reals[i]$y,])
+}
+
+############################################################################################################################################################################
+#Save filtered table
+#Add post table parameters to allow for import within the ZenBlack Software
+############################################################################################################################################################################
+write.table(fileR3, file="Channel_#_cells_drifted_filtered.txt",sep="\t",row.names = FALSE, quote=FALSE) 
+
+write.table(fileR3[1:13], file="Channel_#_cells_drifted_filtered_IMG.txt",sep="\t",row.names = FALSE, quote=FALSE) 
+line<-"                                                                                                   
+
+VoxelSizeX : 0.1000000000
+
+VoxelSizeY : 0.1000000000
+
+ResolutionX : 1.0000000000
+
+ResolutionY : 1.0000000000
+
+SizeX : 512
+
+SizeY : 512
+
+
+ROI List : "
+
+write(line, file="Channel_#_cells_drifted_filtered_IMG.txt", append=TRUE)
