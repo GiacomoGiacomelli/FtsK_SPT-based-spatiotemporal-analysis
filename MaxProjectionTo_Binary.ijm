@@ -1,0 +1,34 @@
+input = "C:/LOCATION/CONDITION/MaxProject/";
+output = "C:/LOCATION/CONDITION/binary/";
+list1 = getFileList(input);
+for (i = 0; i < list1.length; i++){
+run("Bio-Formats (Windowless)", "open="+input+list1[i]+" autoscale color_mode=Default rois_import=[ROI manager] split_channels view=Hyperstack stack_order=XYCZT");
+run("Duplicate...", "duplicate channels=1 ");
+run("Duplicate...", "duplicate channels=1 ");
+run("Gaussian Blur...", "sigma=40");
+run("Calculator Plus", "i1="+input+substring(list1[i],0,9)+"-1.tif i2="+input+substring(list1[i],0,9)+"-2.tif operation=[Divide: i2 = (i1/i2) x k1 + k2] k1=9500 k2=0 create");
+run("Smooth");
+run("Smooth");
+run("Enhance Contrast...", "saturated=0.35");
+run("Subtract Background...", "rolling=15 dark");
+run("Scale...", "x=10 y=10 width=12800 height=12800 interpolation=Bicubic average create title=Results");
+setAutoThreshold("Default");
+run("Convert to Mask");
+run("Convert to Mask");
+run("Dilate");
+run("Dilate");
+run("Fill Holes");
+run("Dilate");
+run("Dilate");
+run("Dilate");
+run("Dilate");
+run("Dilate");
+run("Dilate");
+saveAs("Text Image", output + substring(list1[i],0,9) + "polyMask" + ".txt");
+saveAs("Tiff", output+substring(list1[i],0,9));
+close();
+close();
+close();
+close();
+close();
+}
