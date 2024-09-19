@@ -44,3 +44,22 @@ Script_R2_Comparison:
 - Output 3: Intensity Comparison Map for the first condition ("Strain1_MAP.txt")
 - Output 4: Intensity Comparison Map for the second condition ("Strain2_MAP.txt")
 
+# List and explation of parameters in OUTPUT_ROTATED:
+- Index: Index
+- First.Frame: Frame of fluorescence events first appearance (only relevant for tracking / grouping)
+- Number.Frames: Number of frames that have been grouped to a single fluorescence event (only relevant for grouping)
+- Frames.Missing: Number of frames that show no fluorescence event within a group (only relevant for grouping)
+- Position.X..nm.: Localization (X)(nm)
+- Position.Y..nm.: Localization (Y)(nm)
+- Precision..nm.: Localization precision (nm)
+- Number.Photons: Number of photons (photons)
+- Background.variance: Background variance (photons)
+- Chi.square: measure of the difference between the observed and expected frequencies of the outcomes of a set of events or variables
+- PSF.half.width..nm.: Point Spread Function width at half maximum (nm)
+- Channel: Channel identifier (only for multicolor)
+- Z.slice: Z position (only for Z stack)
+- CellName: Unique cell identifier (Cell+CellNumber+.txt+FOVNumber)
+- Rot_X: Localization (X)(nm) [The cell ROIs angle is calculated as the slope of the segment connecting the two furthest points within the contour] 
+- CellDiameter: Maximum X value for localizations belonging to a rotated cell brought to the origin 
+- CellWidth: Maximum Y value for localizations belonging to a rotated cell brought to the origin
+- CellArea: Theoretical area calculated for a rod of width "CellWidth" and length "CellDiameter". Each pole is half circle of radius "CellWidth"
