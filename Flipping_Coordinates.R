@@ -37,23 +37,115 @@ directory_input<-"C:\\LOCATION\\LOCATION\\LOCATION\\CONDITION\\LOCALIZATION_TABL
 
 ##UPDATE EVERY FOV
 directory_cells<-"C:\\LOCATION\\LOCATION\\LOCATION\\CONDITION\\BINARY_FOLDER\\CELLS_NUMBER"
-FOV<-"10"
+FOV<-"1"
 
 ##DO NOT UPDATE
+output_area<-"AREALIST.RData"
+output_drift<-"CELLS_DRIFTED_FILTERED.txt"
+output_IMG<-"CELLS_DRIFTED_FILTERED_IMG.txt"
 output_flip<-paste("OUTPUT_ROTATED",FOV,".txt", sep = "")
+output_area_cor<-"AREALIST_cor.RData"
+output_area_at0<-"AREALIST_At0.RData"
 
-
+#READ FILE
 directory<-gsub("\\", "/", directory_input, fixed=TRUE)                                                   #working on windows so I have to invert \ to /
 setwd(directory)                                                                                          #setting working directory
 dir()                                                                                                     #show directory content
 file1name<-readline("file1 name:")                                                                        #input the name of the PALM localization table file in the console after running this line
                                                                                
-
 file<-read.delim(file1name, header=T)                                                                     #nrow = embedded null line position is -2
-fileR3<-file[c(1:16)]                                                                                     #file$Channel= Channel number where PAmCherry was imaged
+fileR<-file
+fileR1<-fileR
+
+############################################################################################################################################################################
+#Change folder to where the R.Cell*.txt files are
+#Verify correct alignment between events and ROIs
+############################################################################################################################################################################
+directory<-gsub("\\", "/", directory_cells, fixed=TRUE)                                                   #working on windows so I have to invert \ to /
+setwd(directory)                                                                                          #setting working directory
+dir()                                                                                                     #show directory content
+
+fileNames <- Sys.glob("Cell*.txt")
+LISTofAREAS<-c()
+fx[14]<-NA
+fx[15]<-NA
+fx[16]<-NA
+colnames(fx)[14]<-"CellName"
+colnames(fx)[15]<-"CellDiameter"
+colnames(fx)[16]<-"CellArea"
+
+#The plot(realsA) within the cycle shows the position of the events within the used ROIs, shift them accordingly if necessary
+for (i in fileNames) {
+  c1<-read.table(i, header=TRUE)
+  if (clockwise(data.frame(x=c1$X, y=c1$Y))) {
+    poli<-list(list(x=rev(c1$X*1000), y=rev(c1$Y*1000)))
+    cm1<-owin(poly=poli)
+    pp3<-as.ppp(fx[c(5:6)],cm1)
+    realsA<-subset(pp3,cm1)
+    plot(realsA)                                  
+    if (length(realsA$x)>0){
+      realsA_DF<-as.data.frame(realsA)
+      #plot(fx[which(paste(fx$Position.X..nm.,fx$Position.Y..nm.) %in% paste(realsA_DF$x,realsA_DF$y)),]$Position.Y..nm. ~fx[which(paste(fx$Position.X..nm.,fx$Position.Y..nm.) %in% paste(realsA_DF$x,realsA_DF$y)),]$Position.X..nm.,asp=1)
+      fx[which(paste(fx$Position.X..nm.,fx$Position.Y..nm.) %in% paste(realsA_DF$x,realsA_DF$y)),14]<-paste(i,FOV,sep="")
+      fx[fx$Position.X..nm.==realsA[1]$x & fx$Position.Y..nm.==realsA[1]$y,15][1]<-diameter(cm1)
+      fx[fx$Position.X..nm.==realsA[1]$x & fx$Position.Y..nm.==realsA[1]$y,16][1]<-area.owin(cm1)
+      LISTofAREAS<-c(LISTofAREAS,poli)
+    }
+    
+  }  else {
+    poli<-list(list(x=c1$X*1000, y=c1$Y*1000))
+    cm1<-owin(poly=data.frame(x=c1$X*1000, y=c1$Y*1000))
+    pp3<-as.ppp(fx[c(5:6)],cm1)
+    realsA<-subset(pp3,cm1)
+    plot(realsA)    
+    if (length(realsA$x)>0){
+      realsA_DF<-as.data.frame(realsA)
+      #plot(fx[which(paste(fx$Position.X..nm.,fx$Position.Y..nm.) %in% paste(realsA_DF$x,realsA_DF$y)),]$Position.Y..nm. ~fx[which(paste(fx$Position.X..nm.,fx$Position.Y..nm.) %in% paste(realsA_DF$x,realsA_DF$y)),]$Position.X..nm.,asp=1)
+      fx[which(paste(fx$Position.X..nm.,fx$Position.Y..nm.) %in% paste(realsA_DF$x,realsA_DF$y)),14]<-paste(i,FOV,sep="")
+      fx[fx$Position.X..nm.==realsA[1]$x & fx$Position.Y..nm.==realsA[1]$y,15][1]<-diameter(cm1)
+      fx[fx$Position.X..nm.==realsA[1]$x & fx$Position.Y..nm.==realsA[1]$y,16][1]<-area.owin(cm1)
+      LISTofAREAS<-c(LISTofAREAS,poli)
+    }
+  }
+}
+
+############################################################################################################################################################################
+#Exclude events lying outside the ROIs
+#Update table accordingly
+############################################################################################################################################################################
+write.table(fx[!is.na(fx$CellName),], file=output_tab,sep="\t",row.names = FALSE, quote=FALSE)
+saveRDS(LISTofAREAS, file=output_area)
+file_filtered<-fx[!is.na(fx$CellName),]
+
+############################################################################################################################################################################
+#Save filtered table
+#Add post table parameters to allow for import within the ZenBlack Software
+############################################################################################################################################################################
+write.table(file_filtered[1:13], file=output_IMG,sep="\t",row.names = FALSE, quote=FALSE) 
+line<-"                                                                                                   
+
+VoxelSizeX : 0.0967821
+
+VoxelSizeY : 0.0967821
+
+ResolutionX : 1.0000000000
+
+ResolutionY : 1.0000000000
+
+SizeX : 640
+
+SizeY : 640
+
+
+ROI List : "
+
+write(line, file=output_IMG, append=TRUE)
+############################################################################################################################################################################
+
 ############################################################################################################################################################################
 #Rotation of the cells
 ############################################################################################################################################################################
+fileR3<-file_filtered
 fileNames<-unique(fileR3$CellName)
 
 fileR3[,17]<-0
