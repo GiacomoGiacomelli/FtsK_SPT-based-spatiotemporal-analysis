@@ -16,7 +16,7 @@ library("reshape")
 #Import Files
 ############################################################################################################################################################################
 setwd("LOCATION/EXPERIMENT/COMPARISON")
-C:\\LOCATION\\LOCATION\\LOCATION\\CONDITION\\LOCALIZATION_TABLES_FOLDER
+
 file1<-read.table("C:/LOCATION/LOCATION/LOCATION/CONDITION1/BINARY_FOLDER/Cells1/OUTPUT_ROTATED1.txt", header=T, sep="\t")   
 file2<-read.table("C:/LOCATION/LOCATION/LOCATION/CONDITION1/BINARY_FOLDER/Cells2/OUTPUT_ROTATED2.txt", header=T, sep="\t") 
 file3<-read.table("C:/LOCATION/LOCATION/LOCATION/CONDITION1/BINARY_FOLDER/Cells3/OUTPUT_ROTATED3.txt", header=T, sep="\t")   
