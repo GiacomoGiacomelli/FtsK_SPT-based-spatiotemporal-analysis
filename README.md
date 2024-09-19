@@ -16,7 +16,7 @@ Fiji macro 2 (Watershed):
 - Output: Binary Mask, selected area changes to watersheded version (Can be applied multiple times to different areas within the binary mask - used to segmentate cells)
 - Output format: Requires manual save once satisfied with manual changes (.tif) 
 
-Fiji macro 3:
+Fiji macro 3 (ROIs to R):
 - Input: Binary Mask (.tif)
 - Manual Input required: Add ROIs of interest to ROI manager (Wand tool) (Save the list of ROIs as .zip before proceeding)
 - Requirements: a folder named "Cells" within the working directory
