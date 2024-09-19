@@ -10,8 +10,7 @@ library("plotrix")
 library("pgirmess")
 library("RColorBrewer")
 
-####clockwise vs counterclockwise
-
+####clockwise check function####
 #' @title Check whether points for an owin are clockwise
 #' @param x a dataframe with x coordinates in the first column and y coordinates in the second. 
 #' @details Similarly to owin, the polygon should not be closed
@@ -19,42 +18,39 @@ library("RColorBrewer")
 #' @author The idea has been scavenged from https://stackoverflow.com/a/1165943/1082004
 
 clockwise <- function(x) {
-  
   x.coords <- c(x[[1]], x[[1]][1])
   y.coords <- c(x[[2]], x[[2]][1])
-  
   double.area <- sum(sapply(2:length(x.coords), function(i) {
     (x.coords[i] - x.coords[i-1])*(y.coords[i] + y.coords[i-1])
   }))
-  
   double.area > 0
 } 
 
 ############################################################################################################################################################################
-#File input and filtering
+#Variables, File Inputs, Filtering
 ############################################################################################################################################################################
-#set inputs and outputs
+#set inputs and outputs (
 ##UPDATE EVERY STRAIN
+output_tab<-"OUTPUT.txt"
+strain<-"STRAIN_NAME"
+directory_input<-"C:\\LOCATION\\LOCATION\\LOCATION\\CONDITION\\LOCALIZATION_TABLES_FOLDER"
 
-
-output_tab<-"output_table.txt"
-strain<-"DSMC"
-directory_input<-"X:\\Giacomo Giacomelli\\Collaborations\\Tina\\Ftsk\\Tina_DSMC"#"F:\\Pen_SPT_tables\\030621_ftsk_halo_dsmc\\tables"
 ##UPDATE EVERY FOV
-directory_cells<-"X:\\Giacomo Giacomelli\\Collaborations\\FtsK\\Pen_SPT_tables\\FtsK_PAM_DSMC"#"F:\\Pen_SPT_tables\\030621_ftsk_halo_dsmc\\binary\\cells7"
+directory_cells<-"C:\\LOCATION\\LOCATION\\LOCATION\\CONDITION\\BINARY_FOLDER\\CELLS_NUMBER"
 FOV<-"10"
+
 ##DO NOT UPDATE
-output_flip<-paste("output_rotated",FOV,".txt", sep = "")
+output_flip<-paste("OUTPUT_ROTATED",FOV,".txt", sep = "")
 
 
 directory<-gsub("\\", "/", directory_input, fixed=TRUE)                                                   #working on windows so I have to invert \ to /
 setwd(directory)                                                                                          #setting working directory
 dir()                                                                                                     #show directory content
 file1name<-readline("file1 name:")                                                                        #input the name of the PALM localization table file in the console after running this line
-                                                                                   
+                                                                               
 
-file<-read.delim(file1name, header=T)                                                         #nrow = embedded null line position is -2
-fileR3<-file[c(1:16)]                                                       #file$Channel= Channel number where PAmCherry was imaged
+file<-read.delim(file1name, header=T)                                                                     #nrow = embedded null line position is -2
+fileR3<-file[c(1:16)]                                                                                     #file$Channel= Channel number where PAmCherry was imaged
 ############################################################################################################################################################################
 #Rotation of the cells
 ############################################################################################################################################################################
@@ -179,12 +175,3 @@ for (i in fileNames) {
 ###############
 setwd(directory_cells)
 write.table(fileR3, file=output_flip,sep="\t",row.names = FALSE, quote=FALSE)
-
-######################
-
-pdf(file="Density_Map_Average.pdf",width=3, height=3)
-ggplot(data=fileR3, aes(x=Avg_X, y=Avg_Y))+
-  geom_bin2d(binwidth=25)+
-  scale_fill_continuous(type = "viridis")+
-  coord_fixed()
-dev.off()
